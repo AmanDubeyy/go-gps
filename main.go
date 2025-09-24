@@ -1,9 +1,13 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/InfluxCommunity/influxdb3-go/v2/influxdb3"
 	"github.com/joho/godotenv"
@@ -22,25 +26,46 @@ func main() {
 		Token:    cfg.InfluxToken,
 		Database: cfg.InfluxDBName,
 	})
-
 	if err != nil {
 		log.Fatalf("failed to connect to influxdb: %v", err)
 	}
-	
 	defer client.Close()
 
 	repo := NewInfluxGPSRepository(client, cfg.InfluxDBName)
 
-	for i := range workerCount{
+	for i := 0; i < workerCount; i++ {
 		go InsertionWorker(i, repo)
 	}
 
-	http.HandleFunc("/insert", InsertHandler())
-	http.HandleFunc("/route", SearchByID(repo))
-	http.HandleFunc("/search", SearchHandler(repo))
+	mux := http.NewServeMux()
+	mux.HandleFunc("/insert", InsertHandler())
+	mux.HandleFunc("/route", SearchByID(repo))
+	mux.HandleFunc("/search", SearchHandler(repo))
 
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: mux,
+	}
 
-	fmt.Println("🚍 GPS API running on :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		log.Println("🚍 GPS API running on :8080")
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("server failed: %v", err)
+		}
+	}()
+
+	<-stop
+	log.Println("Shutting down gracefully...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	close(GpsChan)
+
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatalf("server forced to shutdown: %v", err)
+	}
 }
-

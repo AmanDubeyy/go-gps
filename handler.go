@@ -6,6 +6,7 @@ import (
 
 	"strconv"
 	"time"
+	"ondc/model"
 )
 
 type GPSHandler struct {
@@ -20,7 +21,7 @@ func InsertHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 
-		var data GPSData
+		var data model.GPSData
 		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 			http.Error(w, "invalid request", http.StatusBadRequest)
 			return

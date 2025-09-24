@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/InfluxCommunity/influxdb3-go/v2/influxdb3"
+	"ondc/model"
 )
 
 type InfluxGPSRepository struct {
@@ -16,7 +17,7 @@ func NewInfluxGPSRepository(client *influxdb3.Client, bucket string) *InfluxGPSR
 	return &InfluxGPSRepository{client: client, bucket: bucket}
 }
 
-func (r *InfluxGPSRepository) InsertGPS(ctx context.Context, data GPSData) error {
+func (r *InfluxGPSRepository) InsertGPS(ctx context.Context, data model.GPSData) error {
 	point := influxdb3.NewPoint(
 		VEHICLE_LOCATION,
 		map[string]string{
@@ -38,7 +39,7 @@ func (r *InfluxGPSRepository) InsertGPS(ctx context.Context, data GPSData) error
 	return r.client.WritePoints(ctx, []*influxdb3.Point{point})
 }
 
-func (r *InfluxGPSRepository) GetRoute(vehicleID string, start, end time.Time) ([]GPSData, error) {
+func (r *InfluxGPSRepository) GetRoute(vehicleID string, start, end time.Time) ([]model.GPSData, error) {
 	ctx := context.Background()
 
 	if start.IsZero() {
@@ -54,11 +55,11 @@ func (r *InfluxGPSRepository) GetRoute(vehicleID string, start, end time.Time) (
 		return nil, err
 	}
 
-	var vehicles []GPSData
+	var vehicles []model.GPSData
 	for iter.Next() {
 		row := iter.Value()
 
-		vehicles = append(vehicles, GPSData{
+		vehicles = append(vehicles, model.GPSData{
 			VehicleID: row["vehicle_id"].(string),
 			RouteID:   row["route_id"].(string),
 			City:      row["city"].(string),
@@ -78,7 +79,7 @@ func (r *InfluxGPSRepository) GetRoute(vehicleID string, start, end time.Time) (
 	return vehicles, nil
 }
 
-func (r *InfluxGPSRepository) SearchVehicles(minLat, maxLat, minLon, maxLon float64) ([]GPSData, error) {
+func (r *InfluxGPSRepository) SearchVehicles(minLat, maxLat, minLon, maxLon float64) ([]model.GPSData, error) {
 	ctx := context.Background()
 
 	iter, err := r.client.Query(ctx, getAll)
@@ -86,11 +87,11 @@ func (r *InfluxGPSRepository) SearchVehicles(minLat, maxLat, minLon, maxLon floa
 		return nil, err
 	}
 
-	var vehicles []GPSData
+	var vehicles []model.GPSData
 	for iter.Next() {
 		row := iter.Value()
 
-		vehicles = append(vehicles, GPSData{
+		vehicles = append(vehicles, model.GPSData{
 			VehicleID: row["vehicle_id"].(string),
 			RouteID:   row["route_id"].(string),
 			City:      row["city"].(string),

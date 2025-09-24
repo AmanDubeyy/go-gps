@@ -1,5 +1,5 @@
 
-package main
+package model
 
 type GPSData struct {
 	VehicleID string  `json:"vehicle_id"`

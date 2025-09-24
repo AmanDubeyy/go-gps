@@ -1,3 +1,8 @@
-.vscode
+# Ignore VSCode folder
+.vscode/
+
+# Ignore environment file
 .env
-.txt
+
+# Ignore all text files
+*.txt

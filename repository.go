@@ -44,37 +44,45 @@ func (r *InfluxGPSRepository) InsertGPS(ctx context.Context, data GPSData) error
 func (r *InfluxGPSRepository) GetRoute(vehicleID string, start, end time.Time) ([]GPSData, error) {
 	ctx := context.Background()
 
-	query := fmt.Sprintf(`
-	from(bucket:"%s")
-	  |> range(start: %s, stop: %s)
-	  |> filter(fn: (r) => r._measurement == "bus_locations")
-	  |> filter(fn: (r) => r.vehicle_id == "%s")
-	  |> sort(columns:["_time"])
-	`, r.bucket, start.Format(time.RFC3339), end.Format(time.RFC3339), vehicleID)
+	if start.IsZero() {
+		start = time.Now().Add(-24 * time.Hour)
+	}
 
-	result, err := r.client.Query(ctx, query)
+	if end.IsZero() {
+		end = time.Now()
+	}
+
+	query := fmt.Sprintf(`
+		SELECT *
+		FROM bus_locations
+		WHERE vehicle_id = '%s'`,
+		// ORDER BY time ASC
+	vehicleID)
+
+	iter, err := r.client.Query(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 
 	var vehicles []GPSData
-	for result.Next() {
-		row := result.Value()
+	for iter.Next() {
+		row := iter.Value()
+
 		vehicles = append(vehicles, GPSData{
-        VehicleID: row["vehicle_id"].(string),
-        RouteID:   row["route_id"].(string),
-        City:      row["city"].(string),
-        Status:    row["status"].(string),
-        Lat:       row["lat"].(float64),
-        Lon:       row["lon"].(float64),
-        Speed:     row["speed"].(float64),
-        Heading:   int(row["heading"].(float64)),
-        DriverID:  row["driver_id"].(string),
-    	})
+			VehicleID: row["vehicle_id"].(string),
+			RouteID:   row["route_id"].(string),
+			City:      row["city"].(string),
+			Status:    row["status"].(string),
+			Lat:       row["lat"].(float64),
+			Lon:       row["lon"].(float64),
+			Speed:     row["speed"].(float64),
+			Heading:   int(row["heading"].(int64)),
+			DriverID:  row["driver_id"].(string),
+		})
 	}
 
-	if result.Err() != nil {
-		return nil, result.Err()
+	if iter.Err() != nil {
+		return nil, iter.Err()
 	}
 
 	return vehicles, nil

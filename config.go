@@ -12,7 +12,7 @@ func LoadConfig() Config {
 	return Config{
 		InfluxURL:    getEnv("INFLUX_URL", "http://localhost:8181"),
 		InfluxToken:  getEnv("INFLUX_TOKEN", "my-secret-token"),
-		InfluxDBName: getEnv("INFLUX_DB", "gpszz"),
+		InfluxDBName: getEnv("INFLUX_DB", "gps"),
 	}
 }
 

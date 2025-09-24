@@ -21,9 +21,11 @@ func main() {
 		Token:    cfg.InfluxToken,
 		Database: cfg.InfluxDBName,
 	})
+
 	if err != nil {
 		log.Fatalf("failed to connect to influxdb: %v", err)
 	}
+	
 	defer client.Close()
 
 	repo := NewInfluxGPSRepository(client, cfg.InfluxDBName)

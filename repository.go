@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"time"
-	"fmt"
 
 	"github.com/InfluxCommunity/influxdb3-go/v2/influxdb3"
 )

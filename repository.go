@@ -10,11 +10,10 @@ import (
 
 type InfluxGPSRepository struct {
 	client *influxdb3.Client
-	bucket string
 }
 
-func NewInfluxGPSRepository(client *influxdb3.Client, bucket string) *InfluxGPSRepository {
-	return &InfluxGPSRepository{client: client, bucket: bucket}
+func NewInfluxGPSRepository(client *influxdb3.Client) *InfluxGPSRepository {
+	return &InfluxGPSRepository{client: client}
 }
 
 func (r *InfluxGPSRepository) InsertGPS(ctx context.Context, data model.GPSData) error {
@@ -27,7 +26,7 @@ func (r *InfluxGPSRepository) InsertGPS(ctx context.Context, data model.GPSData)
 			"status":     data.Status,
 			"driver_id":  data.DriverID,
 		},
-		map[string]interface{}{
+		map[string]any{
 			"lat":     data.Lat,
 			"lon":     data.Lon,
 			"speed":   data.Speed,
@@ -39,7 +38,7 @@ func (r *InfluxGPSRepository) InsertGPS(ctx context.Context, data model.GPSData)
 	return r.client.WritePoints(ctx, []*influxdb3.Point{point})
 }
 
-func (r *InfluxGPSRepository) GetRoute(vehicleID string) ([]model.GPSData, error) {
+func (r *InfluxGPSRepository) GetRoute(vehicleID string) ([]model.VehicleRoute, error) {
 	ctx := context.Background()
 
 	iter, err := r.client.Query(ctx, getByRouteID(vehicleID))
@@ -47,52 +46,18 @@ func (r *InfluxGPSRepository) GetRoute(vehicleID string) ([]model.GPSData, error
 		return nil, err
 	}
 
-	var vehicles []model.GPSData
+	var vehicles []model.VehicleRoute
 	for iter.Next() {
 		row := iter.Value()
 
-		vehicles = append(vehicles, model.GPSData{
+		vehicles = append(vehicles, model.VehicleRoute{
 			VehicleID: row["vehicle_id"].(string),
-			RouteID:   row["route_id"].(string),
 			City:      row["city"].(string),
 			Status:    row["status"].(string),
 			Lat:       row["lat"].(float64),
 			Lon:       row["lon"].(float64),
-			Speed:     row["speed"].(float64),
-			Heading:   int(row["heading"].(int64)),
 			DriverID:  row["driver_id"].(string),
-		})
-	}
-
-	if iter.Err() != nil {
-		return nil, iter.Err()
-	}
-
-	return vehicles, nil
-}
-
-func (r *InfluxGPSRepository) SearchVehicles(minLat, maxLat, minLon, maxLon float64) ([]model.GPSData, error) {
-	ctx := context.Background()
-
-	iter, err := r.client.Query(ctx, getAll)
-	if err != nil {
-		return nil, err
-	}
-
-	var vehicles []model.GPSData
-	for iter.Next() {
-		row := iter.Value()
-
-		vehicles = append(vehicles, model.GPSData{
-			VehicleID: row["vehicle_id"].(string),
-			RouteID:   row["route_id"].(string),
-			City:      row["city"].(string),
-			Status:    row["status"].(string),
-			Lat:       row["lat"].(float64),
-			Lon:       row["lon"].(float64),
-			Speed:     row["speed"].(float64),
-			Heading:   int(row["heading"].(int64)),
-			DriverID:  row["driver_id"].(string),
+			Time: 	   row["time"].(time.Time).Format(time.RFC3339),
 		})
 	}
 

@@ -15,7 +15,6 @@ import (
 )
 
 var GpsChan = make(chan model.GPSData, 10000)
-const workerCount = 100
 
 func main() {
 	godotenv.Load()
@@ -31,16 +30,15 @@ func main() {
 	}
 	defer client.Close()
 
-	repo := NewInfluxGPSRepository(client, cfg.InfluxDBName)
+	repo := NewInfluxGPSRepository(client)
 
-	for i := 0; i < workerCount; i++ {
+	for i := 0; i < WORKER_COUNT; i++ {
 		go InsertionWorker(i, repo)
 	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/insert", InsertHandler())
 	mux.HandleFunc("/route", SearchByID(repo))
-	mux.HandleFunc("/search", SearchHandler(repo))
 
 	server := &http.Server{
 		Addr:    ":8080",
@@ -51,7 +49,7 @@ func main() {
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		log.Println("🚍 GPS API running on :8080")
+		log.Println("API running on :8080")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("server failed: %v", err)
 		}

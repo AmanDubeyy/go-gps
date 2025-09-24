@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"strconv"
 	"ondc/model"
 )
 
@@ -48,23 +47,13 @@ func SearchByID(repo *InfluxGPSRepository) http.HandlerFunc {
 			return
 		}
 
-		json.NewEncoder(w).Encode(route)
+		json.NewEncoder(w).Encode(successResponse(route))
 	}
 }
 
-func SearchHandler(repo *InfluxGPSRepository) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		minLat, _ := strconv.ParseFloat(r.URL.Query().Get("minLat"), 64)
-		maxLat, _ := strconv.ParseFloat(r.URL.Query().Get("maxLat"), 64)
-		minLon, _ := strconv.ParseFloat(r.URL.Query().Get("minLon"), 64)
-		maxLon, _ := strconv.ParseFloat(r.URL.Query().Get("maxLon"), 64)
-
-		points, err := repo.SearchVehicles(minLat, maxLat, minLon, maxLon)
-		if err != nil {
-			http.Error(w, "failed to search vehicles: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		json.NewEncoder(w).Encode(points)
+func successResponse(data any) map[string]any{
+	return map[string]any{
+		"code" : "sucess",
+		"data" : data,
 	}
 }

@@ -27,10 +27,7 @@ func InsertHandler() http.HandlerFunc {
 
 		select {
 		case GpsChan <- data:
-			json.NewEncoder(w).Encode(map[string]string{
-				"code":    "success",
-				"message": "GPS location updated",
-			})
+			json.NewEncoder(w).Encode(successResponse("GPS location updated"))
 		default:
 			http.Error(w, "server overloaded", http.StatusServiceUnavailable)
 		}

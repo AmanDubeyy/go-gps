@@ -19,7 +19,7 @@ func NewInfluxGPSRepository(client *influxdb3.Client, bucket string) *InfluxGPSR
 
 func (r *InfluxGPSRepository) InsertGPS(ctx context.Context, data GPSData) error {
 	point := influxdb3.NewPoint(
-		"bus_locations",
+		VEHICLE_LOCATION,
 		map[string]string{
 			"vehicle_id": data.VehicleID,
 			"route_id":   data.RouteID,
@@ -36,8 +36,6 @@ func (r *InfluxGPSRepository) InsertGPS(ctx context.Context, data GPSData) error
 		time.Now(),
 	)
 
-	fmt.Print("here")
-
 	return r.client.WritePoints(ctx, []*influxdb3.Point{point})
 }
 
@@ -52,14 +50,7 @@ func (r *InfluxGPSRepository) GetRoute(vehicleID string, start, end time.Time) (
 		end = time.Now()
 	}
 
-	query := fmt.Sprintf(`
-		SELECT *
-		FROM bus_locations
-		WHERE vehicle_id = '%s'`,
-		// ORDER BY time ASC
-	vehicleID)
-
-	iter, err := r.client.Query(ctx, query)
+	iter, err := r.client.Query(ctx, getByRouteID(vehicleID))
 	if err != nil {
 		return nil, err
 	}
@@ -91,18 +82,7 @@ func (r *InfluxGPSRepository) GetRoute(vehicleID string, start, end time.Time) (
 func (r *InfluxGPSRepository) SearchVehicles(minLat, maxLat, minLon, maxLon float64) ([]GPSData, error) {
 	ctx := context.Background()
 
-	// query := fmt.Sprintf(`
-	// 	SELECT *
-	// 	FROM "bus_locations"
-	// 	WHERE lat >= %f AND lat <= %f
-	// 	AND lon >= %f AND lon <= %f
-	// 	AND time >= NOW() - INTERVAL 1 HOUR
-	// 	`, minLat, maxLat, minLon, maxLon,
-	// )
-
-	query := "SELECT * FROM bus_locations"
-
-	iter, err := r.client.Query(ctx, query)
+	iter, err := r.client.Query(ctx, getAll)
 	if err != nil {
 		return nil, err
 	}

@@ -36,7 +36,7 @@ func main() {
 	}
 
 	http.HandleFunc("/insert", InsertHandler())
-	http.HandleFunc("/route", RouteHandler(repo))
+	http.HandleFunc("/route", SearchByID(repo))
 	http.HandleFunc("/search", SearchHandler(repo))
 
 

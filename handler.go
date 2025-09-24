@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"strconv"
-	"time"
 	"ondc/model"
 )
 
@@ -29,20 +28,21 @@ func InsertHandler() http.HandlerFunc {
 
 		select {
 		case GpsChan <- data:
-			w.WriteHeader(http.StatusAccepted)
+			json.NewEncoder(w).Encode(map[string]string{
+				"code":    "success",
+				"message": "GPS location updated",
+			})
 		default:
 			http.Error(w, "server overloaded", http.StatusServiceUnavailable)
 		}
 	}
 }
 
-func RouteHandler(repo *InfluxGPSRepository) http.HandlerFunc {
+func SearchByID(repo *InfluxGPSRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vehicleID := r.URL.Query().Get("vehicle_id")
-		start, _ := time.Parse(time.RFC3339, r.URL.Query().Get("start"))
-		end, _ := time.Parse(time.RFC3339, r.URL.Query().Get("end"))
 
-		route, err := repo.GetRoute(vehicleID, start, end)
+		route, err := repo.GetRoute(vehicleID)
 		if err != nil {
 			http.Error(w, "failed to get route: "+err.Error(), http.StatusInternalServerError)
 			return

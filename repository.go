@@ -39,16 +39,8 @@ func (r *InfluxGPSRepository) InsertGPS(ctx context.Context, data model.GPSData)
 	return r.client.WritePoints(ctx, []*influxdb3.Point{point})
 }
 
-func (r *InfluxGPSRepository) GetRoute(vehicleID string, start, end time.Time) ([]model.GPSData, error) {
+func (r *InfluxGPSRepository) GetRoute(vehicleID string) ([]model.GPSData, error) {
 	ctx := context.Background()
-
-	if start.IsZero() {
-		start = time.Now().Add(-24 * time.Hour)
-	}
-
-	if end.IsZero() {
-		end = time.Now()
-	}
 
 	iter, err := r.client.Query(ctx, getByRouteID(vehicleID))
 	if err != nil {

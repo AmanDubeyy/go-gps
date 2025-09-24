@@ -7,9 +7,10 @@ import (
 
 	"github.com/InfluxCommunity/influxdb3-go/v2/influxdb3"
 	"github.com/joho/godotenv"
+	"ondc/model"
 )
 
-var GpsChan = make(chan GPSData, 10000)
+var GpsChan = make(chan model.GPSData, 10000)
 const workerCount = 100
 
 func main() {

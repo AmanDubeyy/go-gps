@@ -46,7 +46,7 @@ func main() {
 	}
 
 	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(stop, syscall.SIGINT)
 
 	go func() {
 		log.Println("API running on :8080")
@@ -56,7 +56,7 @@ func main() {
 	}()
 
 	<-stop
-	log.Println("Shutting down gracefully...")
+	log.Println("Shutting down gracefully")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

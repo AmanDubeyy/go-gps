@@ -6,27 +6,25 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"strconv"
 	"time"
 
 	"ondc/model"
 )
 
-// Generate random GPS data
 func generateGPSData(id int) model.GPSData {
 	return model.GPSData{
-		VehicleID: fmt.Sprintf("BUS-%d", id),
-		RouteID:   fmt.Sprintf("R-%d", rand.Intn(100)),
-		City:      []string{"Mumbai", "Delhi", "Bangalore", "Chennai"}[rand.Intn(4)],
-		Status:    []string{"running", "stopped", "idle"}[rand.Intn(3)],
-		Lat:       19.0 + rand.Float64(),   // ~19.x
-		Lon:       72.0 + rand.Float64(),   // ~72.x
-		Speed:     20 + rand.Float64()*80,  // between 20–100
-		Heading:   rand.Intn(360),
-		DriverID:  fmt.Sprintf("DRV-%d", rand.Intn(1000)),
+		VehicleID:   strconv.Itoa(id),
+		VehicleType: []string{"Car", "Bus", "Bike", "Truck"}[rand.Intn(4)],
+		RouteID:     fmt.Sprintf("R-%d", rand.Intn(100)),
+		City:        []string{"Mumbai", "Delhi", "Bangalore", "Chennai"}[rand.Intn(4)],
+		Lat:         19.0 + rand.Float64(),  // ~19.x
+		Lon:         72.0 + rand.Float64(),  // ~72.x
+		Speed:       20 + rand.Float64()*80, // between 20–100
+		RegNo:       []string{"HR10B7373", "HR10B7371", "HR10B7370", "HR10B7372"}[rand.Intn(4)],
 	}
 }
 
-// Insert multiple GPS records via HTTP
 func InsertRecords(n int) error {
 	client := &http.Client{Timeout: 5 * time.Second}
 	url := "http://localhost:8080/insert"

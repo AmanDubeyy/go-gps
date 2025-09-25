@@ -23,14 +23,12 @@ func (r *InfluxGPSRepository) InsertGPS(ctx context.Context, data model.GPSData)
 			"vehicle_id": data.VehicleID,
 			"route_id":   data.RouteID,
 			"city":       data.City,
-			"status":     data.Status,
-			"driver_id":  data.DriverID,
+			"reg_no":     data.RegNo,
 		},
 		map[string]any{
-			"lat":     data.Lat,
-			"lon":     data.Lon,
-			"speed":   data.Speed,
-			"heading": data.Heading,
+			"lat":   data.Lat,
+			"lon":   data.Lon,
+			"speed": data.Speed,
 		},
 		time.Now(),
 	)
@@ -51,13 +49,13 @@ func (r *InfluxGPSRepository) GetRoute(vehicleID string) ([]model.VehicleRoute, 
 		row := iter.Value()
 
 		vehicles = append(vehicles, model.VehicleRoute{
-			VehicleID: row["vehicle_id"].(string),
-			City:      row["city"].(string),
-			Status:    row["status"].(string),
-			Lat:       row["lat"].(float64),
-			Lon:       row["lon"].(float64),
-			DriverID:  row["driver_id"].(string),
-			Time: 	   row["time"].(time.Time).Format(time.RFC3339),
+			VehicleID:   row["vehicle_id"].(int),
+			VehicleType: row["vehicle_type"].(string),
+			City:        row["city"].(string),
+			Status:      row["status"].(string),
+			Lat:         row["lat"].(float64),
+			Lon:         row["lon"].(float64),
+			Time:        row["time"].(time.Time).Format(time.RFC3339),
 		})
 	}
 
@@ -67,5 +65,3 @@ func (r *InfluxGPSRepository) GetRoute(vehicleID string) ([]model.VehicleRoute, 
 
 	return vehicles, nil
 }
-
-

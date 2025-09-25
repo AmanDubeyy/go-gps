@@ -20,10 +20,11 @@ func (r *InfluxGPSRepository) InsertGPS(ctx context.Context, data model.GPSData)
 	point := influxdb3.NewPoint(
 		VEHICLE_LOCATION,
 		map[string]string{
-			"vehicle_id": data.VehicleID,
-			"route_id":   data.RouteID,
-			"city":       data.City,
-			"reg_no":     data.RegNo,
+			"vehicle_id":   data.VehicleID,
+			"vehicle_type": data.VehicleType,
+			"route_id":     data.RouteID,
+			"city":         data.City,
+			"reg_no":       data.RegNo,
 		},
 		map[string]any{
 			"lat":   data.Lat,
@@ -49,13 +50,13 @@ func (r *InfluxGPSRepository) GetRoute(vehicleID string) ([]model.VehicleRoute, 
 		row := iter.Value()
 
 		vehicles = append(vehicles, model.VehicleRoute{
-			VehicleID:   row["vehicle_id"].(int),
+			VehicleID: row["vehicle_id"].(string),
 			VehicleType: row["vehicle_type"].(string),
-			City:        row["city"].(string),
-			Status:      row["status"].(string),
-			Lat:         row["lat"].(float64),
-			Lon:         row["lon"].(float64),
-			Time:        row["time"].(time.Time).Format(time.RFC3339),
+			RegNo: row["reg_no"].(string),
+			City: row["city"].(string),
+			Lat:  row["lat"].(float64),
+			Lon:  row["lon"].(float64),
+			Time: row["time"].(time.Time).Format(time.RFC3339),
 		})
 	}
 
